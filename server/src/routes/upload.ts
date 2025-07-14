@@ -44,7 +44,7 @@ const upload = multer({
   }
 });
 
-// 解析Excel文件
+// 解析Excel文件 - 支持新的复杂格式
 function parseExcelFile(filePath: string): Omit<HCRecord, 'id'>[] {
   const workbook = XLSX.readFile(filePath);
   const sheetName = workbook.SheetNames[0];
@@ -57,32 +57,74 @@ function parseExcelFile(filePath: string): Omit<HCRecord, 'id'>[] {
   const uploadTime = new Date().toISOString();
   const fileName = path.basename(filePath);
 
-  jsonData.forEach((row: any) => {
-    // 支持多种列名格式
-    const department = row['部门'] || row['Department'] || row['department'] || '';
-    const month = row['月份'] || row['Month'] || row['month'] || '';
-    const hcCount = parseInt(row['HC数量'] || row['HC_Count'] || row['hc_count'] || row['HC'] || '0');
-    const employeeName = row['员工姓名'] || row['Employee_Name'] || row['employee_name'] || '';
+  // 月份映射
+  const monthColumns = [
+    '1月', '2月', '3月', '4月', '5月', '6月',
+    '7月', '8月', '9月', '10月', '11月', '12月'
+  ];
 
-    if (department && month && !isNaN(hcCount)) {
-      // 格式化月份为YYYY-MM格式
-      let formattedMonth = month.toString();
-      if (formattedMonth.length === 6) {
-        // 如果是YYYYMM格式，转换为YYYY-MM
-        formattedMonth = `${formattedMonth.substring(0, 4)}-${formattedMonth.substring(4, 6)}`;
-      } else if (!formattedMonth.includes('-') && formattedMonth.length === 8) {
-        // 如果是YYYYMMDD格式，提取YYYY-MM
-        formattedMonth = `${formattedMonth.substring(0, 4)}-${formattedMonth.substring(4, 6)}`;
-      }
+  jsonData.forEach((row: any, index: number) => {
+    try {
+      // 构建部门层级信息
+      const departmentParts = [];
 
-      records.push({
-        department: department.toString(),
-        month: formattedMonth,
-        hc_count: hcCount,
-        employee_name: employeeName ? employeeName.toString() : undefined,
-        upload_time: uploadTime,
-        file_name: fileName
+      // 收集所有部门级别
+      const dept1 = row['一级部门'] || '';
+      const dept2 = row['二级部门'] || '';
+      const dept3 = row['三级部门'] || '';
+      const dept4 = row['四级部门'] || '';
+      const dept5 = row['五级部门'] || '';
+      const dept6 = row['六级部门'] || '';
+
+      // 构建部门路径
+      if (dept1) departmentParts.push(dept1);
+      if (dept2) departmentParts.push(dept2);
+      if (dept3) departmentParts.push(dept3);
+      if (dept4) departmentParts.push(dept4);
+      if (dept5) departmentParts.push(dept5);
+      if (dept6) departmentParts.push(dept6);
+
+      const department = departmentParts.join(' > ') || '未知部门';
+
+      // 获取其他信息
+      const employeeType = row['员工类型'] || '';
+      const jobFamily = row['job family'] || '';
+      const jobGroup = row['job group'] || '';
+      const jobLevel = row['职级'] || '';
+      const city = row['城市'] || '';
+
+      // 构建员工信息
+      const employeeInfo = [employeeType, jobFamily, jobGroup, jobLevel, city]
+        .filter(info => info && info.toString().trim())
+        .join(' | ');
+
+      // 处理每个月的HC数据
+      monthColumns.forEach((monthCol, monthIndex) => {
+        const hcValue = row[monthCol];
+
+        if (hcValue !== undefined && hcValue !== null && hcValue !== '') {
+          const hcCount = parseInt(hcValue.toString()) || 0;
+
+          if (hcCount > 0) {
+            // 构建月份格式 (YYYY-MM)
+            const currentYear = new Date().getFullYear();
+            const monthNum = (monthIndex + 1).toString().padStart(2, '0');
+            const formattedMonth = `${currentYear}-${monthNum}`;
+
+            records.push({
+              department: department,
+              month: formattedMonth,
+              hc_count: hcCount,
+              employee_name: employeeInfo || undefined,
+              upload_time: uploadTime,
+              file_name: fileName
+            });
+          }
+        }
       });
+
+    } catch (error) {
+      console.warn(`处理第 ${index + 2} 行数据时出错:`, error);
     }
   });
 
@@ -109,7 +151,7 @@ router.post('/', upload.single('file'), async (req, res) => {
       fs.unlinkSync(req.file.path);
       return res.status(400).json({
         success: false,
-        message: 'Excel文件中没有找到有效的HC数据，请检查文件格式'
+        message: 'Excel文件中没有找到有效的HC数据，请检查文件格式。\n\n期望的列名包括：\n- 一级部门、二级部门、三级部门、四级部门、五级部门、六级部门\n- 员工类型、job family、job group、职级、城市\n- 1月、2月、3月...12月'
       });
     }
 
@@ -118,14 +160,22 @@ router.post('/', upload.single('file'), async (req, res) => {
 
     console.log(`成功处理 ${records.length} 条HC记录`);
 
+    // 统计信息
+    const departments = [...new Set(records.map(r => r.department))];
+    const months = [...new Set(records.map(r => r.month))].sort();
+    const totalHC = records.reduce((sum, r) => sum + r.hc_count, 0);
+
     res.json({
       success: true,
       message: `成功上传并处理了 ${records.length} 条HC记录`,
       data: {
         recordCount: records.length,
+        totalHC: totalHC,
         fileName: req.file.originalname,
-        departments: [...new Set(records.map(r => r.department))],
-        months: [...new Set(records.map(r => r.month))].sort()
+        departments: departments,
+        months: months,
+        departmentCount: departments.length,
+        monthCount: months.length
       }
     });
 

@@ -115,8 +115,8 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ data, loading }) => {
 
   // 部门月份热力图数据
   const heatmapChartData = useMemo(() => {
-    const departments = [...new Set(data.map(r => r.department))].sort();
-    const months = [...new Set(data.map(r => r.month))].sort();
+    const departments = Array.from(new Set(data.map(r => r.department))).sort();
+    const months = Array.from(new Set(data.map(r => r.month))).sort();
 
     const heatmapData: [number, number, number][] = [];
     const maxValue = Math.max(...data.map(r => r.hc_count));

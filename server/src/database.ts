@@ -1,10 +1,23 @@
 import sqlite3 from 'sqlite3';
 import path from 'path';
+import fs from 'fs';
 
-const dbPath = path.join(__dirname, '../data/hc_data.db');
+// 确保data目录存在
+const dataDir = path.join(__dirname, '../data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+const dbPath = path.join(dataDir, 'hc_data.db');
 
 // 创建数据库连接
-export const db = new sqlite3.Database(dbPath);
+export const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('数据库连接失败:', err.message);
+  } else {
+    console.log('数据库连接成功:', dbPath);
+  }
+});
 
 // HC数据接口
 export interface HCRecord {

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HC管理系统 - 界面预览</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .upload-area {
+            border: 2px dashed #d9d9d9;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background: #fafafa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #1890ff;
+            background: #f0f8ff;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #1890ff;
+            margin-bottom: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .stats-number {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .stats-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .filter-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-control {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .chart-placeholder {
+            height: 300px;
+            background: linear-gradient(45deg, #f0f8ff, #e6f7ff);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1890ff;
+            font-size: 18px;
+            border: 2px dashed #1890ff;
+        }
+
+        .heatmap-placeholder {
+            height: 400px;
+            background: linear-gradient(45deg, #fff2e8, #fff7e6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fa8c16;
+            font-size: 18px;
+            border: 2px dashed #fa8c16;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .data-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .data-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .table-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .feature-icon {
+            font-size: 24px;
+            margin-top: 4px;
+        }
+
+        .feature-content h4 {
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .feature-content p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>
+            📊 HC管理系统
+        </h1>
+    </header>
+
+    <div class="container">
+        <!-- 文件上传区域 -->
+        <div class="card">
+            <h3 style="margin-bottom: 16px;">📤 上传HC数据文件</h3>
+            <p style="color: #666; margin-bottom: 16px;">支持 .xlsx 和 .xls 格式，文件大小不超过10MB</p>
+
+            <div class="upload-area">
+                <div class="upload-icon">📁</div>
+                <h4>点击或拖拽文件到此区域上传</h4>
+                <p style="color: #999; margin-top: 8px;">Excel文件应包含：部门、月份、HC数量等列</p>
+            </div>
+
+            <div style="margin-top: 16px; padding: 16px; background: #f6f8fa; border-radius: 6px;">
+                <h4>Excel文件格式要求：</h4>
+                <ul style="margin-top: 8px; padding-left: 20px;">
+                    <li><strong>部门</strong>：部门名称（必填）</li>
+                    <li><strong>月份</strong>：格式为 YYYY-MM 或 YYYYMM（必填）</li>
+                    <li><strong>HC数量</strong>：数字格式（必填）</li>
+                    <li><strong>员工姓名</strong>：员工姓名（可选）</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="stats-grid">
+            <div class="stats-card">
+                <div class="stats-number">156</div>
+                <div class="stats-label">总HC数量</div>
+            </div>
+            <div class="stats-card">
+                <div class="stats-number">24</div>
+                <div class="stats-label">总记录数</div>
+            </div>
+            <div class="stats-card">
+                <div class="stats-number">3</div>
+                <div class="stats-label">部门数量</div>
+            </div>
+            <div class="stats-card">
+                <div class="stats-number">6</div>
+                <div class="stats-label">月份数量</div>
+            </div>
+        </div>
+
+        <!-- 筛选面板 -->
+        <div class="card">
+            <h3 style="margin-bottom: 16px;">🔍 数据筛选</h3>
+            <div class="filter-panel">
+                <div class="form-group">
+                    <label>选择部门：</label>
+                    <select class="form-control" multiple style="height: 80px;">
+                        <option>技术部</option>
+                        <option>产品部</option>
+                        <option>运营部</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>开始月份：</label>
+                    <input type="month" class="form-control" value="2024-01">
+                </div>
+                <div class="form-group">
+                    <label>结束月份：</label>
+                    <input type="month" class="form-control" value="2024-03">
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary">应用筛选</button>
+                    <button class="btn btn-secondary" style="margin-top: 8px;">清除筛选</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图表展示 -->
+        <div class="chart-grid">
+            <div class="card">
+                <h3 style="margin-bottom: 16px;">📊 各部门HC统计</h3>
+                <div class="chart-placeholder">
+                    📊 部门HC统计柱状图
+                </div>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom: 16px;">📈 月度HC趋势</h3>
+                <div class="chart-placeholder">
+                    📈 月度HC趋势折线图
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom: 16px;">🔥 部门月度HC热力图</h3>
+            <div class="heatmap-placeholder">
+                🔥 部门×月份HC分布热力图
+            </div>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="card">
+            <div class="table-actions">
+                <h3>📋 HC数据详情</h3>
+                <div>
+                    <button class="btn btn-primary">📥 导出数据</button>
+                    <button class="btn btn-secondary" style="margin-left: 8px;">🗑️ 清空数据</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>部门</th>
+                            <th>月份</th>
+                            <th>HC数量</th>
+                            <th>员工姓名</th>
+                            <th>上传时间</th>
+                            <th>文件名</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>技术部</td>
+                            <td>2024-01</td>
+                            <td style="color: #1890ff; font-weight: bold;">15</td>
+                            <td>张三</td>
+                            <td>2024-01-15 10:30:00</td>
+                            <td>HC数据_2024Q1.xlsx</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>产品部</td>
+                            <td>2024-01</td>
+                            <td style="color: #1890ff; font-weight: bold;">8</td>
+                            <td>李四</td>
+                            <td>2024-01-15 10:30:00</td>
+                            <td>HC数据_2024Q1.xlsx</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>运营部</td>
+                            <td>2024-01</td>
+                            <td style="color: #1890ff; font-weight: bold;">12</td>
+                            <td>王五</td>
+                            <td>2024-01-15 10:30:00</td>
+                            <td>HC数据_2024Q1.xlsx</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 功能特色 -->
+        <div class="card">
+            <h3 style="margin-bottom: 16px;">✨ 系统功能特色</h3>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-content">
+                        <h4>智能Excel解析</h4>
+                        <p>自动识别中英文列名，支持多种日期格式，智能数据验证</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📈</div>
+                    <div class="feature-content">
+                        <h4>实时数据可视化</h4>
+                        <p>上传后立即生成图表，交互式操作，多维度数据展示</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🔍</div>
+                    <div class="feature-content">
+                        <h4>灵活筛选功能</h4>
+                        <p>多部门同时筛选，时间范围选择，实时筛选结果更新</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">💾</div>
+                    <div class="feature-content">
+                        <h4>数据导出</h4>
+                        <p>筛选后数据导出，Excel格式下载，保持原始数据格式</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📱</div>
+                    <div class="feature-content">
+                        <h4>响应式设计</h4>
+                        <p>支持桌面端、平板、手机访问，自适应不同屏幕尺寸</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🚀</div>
+                    <div class="feature-content">
+                        <h4>高性能架构</h4>
+                        <p>React 18 + TypeScript构建，现代化技术栈，流畅用户体验</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 简单的交互效果
+        document.querySelector('.upload-area').addEventListener('click', function() {
+            alert('这是界面预览版本。\n\n要体验完整功能，请：\n1. 安装Node.js\n2. 运行 start.bat\n3. 访问 http://localhost:3000');
+        });
+
+        document.querySelectorAll('.btn-primary').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.textContent.includes('筛选')) {
+                    alert('筛选功能演示：\n- 支持多部门选择\n- 时间范围筛选\n- 实时结果更新');
+                } else if (this.textContent.includes('导出')) {
+                    alert('导出功能演示：\n- 导出筛选后的数据\n- Excel格式下载\n- 保持数据格式');
+                }
+            });
+        });
+
+        // 响应式提示
+        function checkMobile() {
+            if (window.innerWidth <= 768) {
+                console.log('移动端界面已优化');
+            }
+        }
+
+        window.addEventListener('resize', checkMobile);
+        checkMobile();
+    </script>
+</body>
+</html>
