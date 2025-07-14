@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Tree, Card, Typography, Input, Button, Space } from 'antd';
-import { SearchOutlined, ReloadOutlined } from '@ant-design/icons';
-import type { TreeDataNode } from 'antd';
 import { HCRecord } from '../types';
 
 const { Title } = Typography;
 const { Search } = Input;
-
-type Key = string | number;
 
 interface DepartmentTreeProps {
   data: HCRecord[];
@@ -19,8 +15,6 @@ interface DepartmentNode {
   key: string;
   title: string;
   children?: DepartmentNode[];
-  isLeaf?: boolean;
-  count?: number;
 }
 
 const DepartmentTree: React.FC<DepartmentTreeProps> = ({
@@ -29,10 +23,9 @@ const DepartmentTree: React.FC<DepartmentTreeProps> = ({
   onDepartmentChange
 }) => {
   const [treeData, setTreeData] = useState<DepartmentNode[]>([]);
-  const [expandedKeys, setExpandedKeys] = useState<Key[]>([]);
-  const [checkedKeys, setCheckedKeys] = useState<Key[]>(selectedDepartments);
+  const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
+  const [checkedKeys, setCheckedKeys] = useState<string[]>(selectedDepartments);
   const [searchValue, setSearchValue] = useState('');
-  const [autoExpandParent, setAutoExpandParent] = useState(true);
 
   // 构建部门树结构
   const buildDepartmentTree = (records: HCRecord[]): DepartmentNode[] => {
@@ -51,16 +44,13 @@ const DepartmentTree: React.FC<DepartmentTreeProps> = ({
           const node: DepartmentNode = {
             key: currentPath,
             title: dept,
-            children: [],
-            isLeaf: index === departmentPath.length - 1,
-            count: 0
+            children: []
           };
 
           departmentMap.set(currentPath, node);
 
           if (parentNode) {
             parentNode.children!.push(node);
-            parentNode.isLeaf = false;
           } else {
             rootNodes.push(node);
           }
@@ -68,59 +58,20 @@ const DepartmentTree: React.FC<DepartmentTreeProps> = ({
 
         parentNode = departmentMap.get(currentPath)!;
       });
-
-      // 更新叶子节点的计数
-      if (parentNode) {
-        parentNode.count = (parentNode.count || 0) + record.hc_count;
-      }
     });
 
-    // 递归计算父节点的计数
-    const calculateParentCounts = (nodes: DepartmentNode[]): void => {
-      nodes.forEach(node => {
-        if (node.children && node.children.length > 0) {
-          calculateParentCounts(node.children);
-          node.count = node.children.reduce((sum, child) => sum + (child.count || 0), 0);
-        }
-      });
-    };
-
-    calculateParentCounts(rootNodes);
-
-    // 添加计数到标题
-    const addCountToTitle = (nodes: DepartmentNode[]): DepartmentNode[] => {
-      return nodes.map(node => ({
-        ...node,
-        title: `${node.title} (${node.count || 0})`,
-        children: node.children ? addCountToTitle(node.children) : undefined
-      }));
-    };
-
-    return addCountToTitle(rootNodes);
+    return rootNodes;
   };
 
   const getAllKeys = (nodes: DepartmentNode[]): string[] => {
     let keys: string[] = [];
     nodes.forEach(node => {
       keys.push(node.key);
-      if (node.children) {
+      if (node.children && node.children.length > 0) {
         keys = keys.concat(getAllKeys(node.children));
       }
     });
     return keys;
-  };
-
-  const filterTreeData = (nodes: DepartmentNode[], searchValue: string): DepartmentNode[] => {
-    return nodes.filter(node => {
-      const titleMatch = node.title.toLowerCase().includes(searchValue.toLowerCase());
-      const hasMatchingChildren = node.children &&
-        filterTreeData(node.children, searchValue).length > 0;
-
-      return titleMatch || hasMatchingChildren;
-    }).map(node => ({
-      ...node,
-      children: node.children ? filterTreeData(node.children, searchValue) : undefined
-    }));
   };
 
   useEffect(() => {
@@ -136,28 +87,14 @@ const DepartmentTree: React.FC<DepartmentTreeProps> = ({
     setCheckedKeys(selectedDepartments);
   }, [selectedDepartments]);
 
-  const onExpand = (expandedKeysValue: Key[]) => {
+  const onExpand = (expandedKeysValue: string[]) => {
     setExpandedKeys(expandedKeysValue);
-    setAutoExpandParent(false);
   };
 
-  const onCheck = (checkedKeysValue: Key[] | { checked: Key[]; halfChecked: Key[] }) => {
+  const onCheck = (checkedKeysValue: any) => {
     const keys = Array.isArray(checkedKeysValue) ? checkedKeysValue : checkedKeysValue.checked;
     setCheckedKeys(keys);
-    onDepartmentChange(keys.map((key: Key) => String(key)));
-  };
-
-  const onSearch = (value: string) => {
-    setSearchValue(value);
-    if (value) {
-      const filteredData = filterTreeData(treeData, value);
-      const allKeys = getAllKeys(filteredData);
-      setExpandedKeys(allKeys);
-      setAutoExpandParent(true);
-    } else {
-      setExpandedKeys(treeData.map(node => node.key));
-      setAutoExpandParent(false);
-    }
+    onDepartmentChange(keys);
   };
 
   const onClearAll = () => {
@@ -171,31 +108,20 @@ const DepartmentTree: React.FC<DepartmentTreeProps> = ({
     onDepartmentChange(allKeys);
   };
 
-  const displayTreeData = searchValue ? filterTreeData(treeData, searchValue) : treeData;
-
   return (
     <Card
       size="small"
       style={{
         width: 280,
         height: 'fit-content',
-        maxHeight: '80vh',
-        overflow: 'hidden'
+        maxHeight: '80vh'
       }}
     >
       <div style={{ marginBottom: 12 }}>
         <Title level={5} style={{ margin: 0, marginBottom: 8 }}>
           部门筛选
         </Title>
-        <Search
-          placeholder="搜索部门"
-          allowClear
-          onSearch={onSearch}
-          onChange={(e) => onSearch(e.target.value)}
-          style={{ marginBottom: 8 }}
-          size="small"
-        />
-        <Space size="small">
+        <Space size="small" style={{ marginBottom: 8 }}>
           <Button
             size="small"
             onClick={onSelectAll}
@@ -214,24 +140,17 @@ const DepartmentTree: React.FC<DepartmentTreeProps> = ({
       </div>
 
       <div style={{
-        maxHeight: 'calc(80vh - 120px)',
-        overflowY: 'auto',
-        overflowX: 'hidden'
+        maxHeight: 'calc(80vh - 100px)',
+        overflowY: 'auto'
       }}>
         <Tree
           checkable
           onExpand={onExpand}
           expandedKeys={expandedKeys}
-          autoExpandParent={autoExpandParent}
           onCheck={onCheck}
           checkedKeys={checkedKeys}
-          treeData={displayTreeData}
-          style={{
-            fontSize: '13px',
-            lineHeight: '20px'
-          }}
-          height={400}
-          virtual={false}
+          treeData={treeData}
+          style={{ fontSize: '13px' }}
         />
       </div>
 
