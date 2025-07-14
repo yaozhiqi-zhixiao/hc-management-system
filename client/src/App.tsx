@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Typography, message } from 'antd';
+import { Layout, Typography, message, Row, Col } from 'antd';
 import { BarChartOutlined } from '@ant-design/icons';
 import UploadComponent from './components/UploadComponent';
 import FilterPanel from './components/FilterPanel';
 import ChartDisplay from './components/ChartDisplay';
 import DataTable from './components/DataTable';
 import StatsCards from './components/StatsCards';
+import DepartmentTree from './components/DepartmentTree';
 import { HCRecord, StatisticsData } from './types';
 import { getStatistics, getHCData } from './services/api';
 
@@ -19,6 +20,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<string[]>([]);
   const [months, setMonths] = useState<string[]>([]);
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
 
   // 加载数据
   const loadData = async () => {
@@ -44,6 +46,20 @@ const App: React.FC = () => {
       console.error('加载数据失败:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 处理部门筛选
+  const handleDepartmentFilter = (selectedDepts: string[]) => {
+    setSelectedDepartments(selectedDepts);
+
+    if (selectedDepts.length === 0) {
+      setFilteredData(data);
+    } else {
+      const filtered = data.filter(record =>
+        selectedDepts.some(dept => record.department.includes(dept))
+      );
+      setFilteredData(filtered);
     }
   };
 
@@ -74,26 +90,43 @@ const App: React.FC = () => {
         </div>
       </Header>
 
-      <Content>
+      <Content style={{ padding: '16px' }}>
         {/* 文件上传区域 */}
         <UploadComponent onUploadSuccess={handleUploadSuccess} />
 
         {/* 统计卡片 */}
         {statistics && <StatsCards statistics={statistics} />}
 
-        {/* 筛选面板 */}
-        <FilterPanel
-          departments={departments}
-          months={months}
-          data={data}
-          onFilter={handleFilter}
-        />
+        {/* 主要内容区域 */}
+        <Row gutter={16} style={{ marginTop: 16 }}>
+          {/* 左侧：部门筛选器 */}
+          <Col xs={24} sm={8} md={6} lg={5} xl={4}>
+            <div style={{ position: 'sticky', top: 16 }}>
+              <DepartmentTree
+                data={data}
+                selectedDepartments={selectedDepartments}
+                onDepartmentChange={handleDepartmentFilter}
+              />
+            </div>
+          </Col>
 
-        {/* 图表展示 */}
-        <ChartDisplay data={filteredData} loading={loading} />
+          {/* 右侧：数据详情 */}
+          <Col xs={24} sm={16} md={18} lg={19} xl={20}>
+            {/* 其他筛选面板 */}
+            <FilterPanel
+              departments={departments}
+              months={months}
+              data={selectedDepartments.length > 0 ? filteredData : data}
+              onFilter={handleFilter}
+            />
 
-        {/* 数据表格 */}
-        <DataTable data={filteredData} loading={loading} />
+            {/* 图表展示 */}
+            <ChartDisplay data={filteredData} loading={loading} />
+
+            {/* 数据表格 */}
+            <DataTable data={filteredData} loading={loading} />
+          </Col>
+        </Row>
       </Content>
     </Layout>
   );
